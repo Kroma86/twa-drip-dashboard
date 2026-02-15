@@ -40,21 +40,19 @@ code{
   padding:2px 8px;border-radius:6px;background:rgba(130,141,185,.1);color:var(--lavender);
 }
 
-/* ═══ ANIMATIONS — class-based, bulletproof ═══ */
-.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
-.reveal.visible{opacity:1;transform:translateY(0)}
-.reveal.d1{transition-delay:.06s}.reveal.d2{transition-delay:.12s}.reveal.d3{transition-delay:.18s}
-.reveal.d4{transition-delay:.24s}.reveal.d5{transition-delay:.3s}.reveal.d6{transition-delay:.36s}
-.reveal.d7{transition-delay:.42s}.reveal.d8{transition-delay:.48s}.reveal.d9{transition-delay:.54s}
-.reveal.d10{transition-delay:.6s}.reveal.d11{transition-delay:.66s}.reveal.d12{transition-delay:.72s}
+/* ═══ ANIMATIONS — pure CSS, no JS dependency ═══ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleUp{from{opacity:0;transform:scale(.9) translateY(14px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
 
-/* Scale variant for nodes */
-.reveal-node{opacity:0;transform:scale(.9) translateY(16px);transition:opacity .55s cubic-bezier(.22,1,.36,1),transform .55s cubic-bezier(.22,1,.36,1)}
-.reveal-node.visible{opacity:1;transform:scale(1) translateY(0)}
+.reveal{animation:fadeUp .65s cubic-bezier(.22,1,.36,1) both}
+.reveal-node{animation:scaleUp .55s cubic-bezier(.22,1,.36,1) both}
+.reveal-row{animation:slideIn .4s ease both}
 
-/* Slide-in variant for table rows */
-.reveal-row{opacity:0;transform:translateX(-10px);transition:opacity .4s ease,transform .4s ease}
-.reveal-row.visible{opacity:1;transform:translateX(0)}
+.d1{animation-delay:.06s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}
+.d4{animation-delay:.24s}.d5{animation-delay:.3s}.d6{animation-delay:.36s}
+.d7{animation-delay:.42s}.d8{animation-delay:.48s}.d9{animation-delay:.54s}
+.d10{animation-delay:.6s}.d11{animation-delay:.66s}.d12{animation-delay:.72s}
 
 @keyframes pulse{0%,100%{box-shadow:0 0 6px var(--green),0 0 18px rgba(74,190,138,.25)}50%{box-shadow:0 0 14px var(--green),0 0 36px rgba(74,190,138,.4)}}
 @keyframes dashFlow{to{stroke-dashoffset:-20}}
@@ -554,31 +552,6 @@ code{
 
 <script>
 function tog(el){el.classList.toggle('open')}
-
-// Robust IntersectionObserver — adds 'visible' class on scroll
-const observer = new IntersectionObserver(function(entries) {
-  entries.forEach(function(entry) {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      observer.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
-
-// Observe all reveal elements
-document.querySelectorAll('.reveal, .reveal-node, .reveal-row').forEach(function(el) {
-  observer.observe(el);
-});
-
-// Fallback: if elements are already in viewport on load, mark them visible immediately
-window.addEventListener('load', function() {
-  document.querySelectorAll('.reveal, .reveal-node, .reveal-row').forEach(function(el) {
-    var rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      el.classList.add('visible');
-    }
-  });
-});
 </script>
 </body>
 </html>
