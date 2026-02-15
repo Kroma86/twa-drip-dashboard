@@ -6,581 +6,604 @@
 <title>TWA Email Drip Workflow — QA Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ──────────── RESET & BASE ──────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f1117;--surface:rgba(255,255,255,.04);--glass:rgba(255,255,255,.06);
-  --glass-border:rgba(255,255,255,.08);--glass-hover:rgba(255,255,255,.1);
+  --bg:#0f1117;--bg2:#13151d;--surface:rgba(255,255,255,.035);
+  --glass:rgba(255,255,255,.05);--glass-border:rgba(255,255,255,.07);
+  --glass-hover:rgba(255,255,255,.09);--glass-active:rgba(255,255,255,.12);
   --navy:#34446A;--coral:#FF7F56;--lavender:#828DB9;--green:#4abe8a;--red:#F06C5A;
-  --text:#e4e4e7;--text-dim:#8b8b9e;--text-bright:#ffffff;
-  --radius:16px;--radius-sm:10px;
+  --amber:#f0c832;--teal:#4a9a8a;
+  --text:#d4d4dc;--text-dim:#6b6b80;--text-bright:#f0f0f5;
+  --radius:18px;--radius-sm:12px;--radius-xs:8px;
 }
 html{scroll-behavior:smooth}
 body{
-  font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
-  line-height:1.6;overflow-x:hidden;min-height:100vh;
+  font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);
+  color:var(--text);line-height:1.6;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -30%,rgba(52,68,106,.18),transparent 70%),
+    radial-gradient(ellipse 80% 60% at 90% 90%,rgba(255,127,86,.04),transparent),
+    radial-gradient(ellipse 60% 50% at 5% 50%,rgba(130,141,185,.05),transparent);
+  background-attachment:fixed;
 }
-body::before{
-  content:'';position:fixed;inset:0;
-  background:radial-gradient(ellipse 80% 60% at 50% -20%,rgba(52,68,106,.25),transparent),
-             radial-gradient(ellipse 60% 40% at 80% 80%,rgba(255,127,86,.06),transparent),
-             radial-gradient(ellipse 50% 50% at 10% 60%,rgba(130,141,185,.08),transparent);
-  pointer-events:none;z-index:0;
-}
-.container{max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
-a{color:var(--coral);text-decoration:none}
 
-/* ──────────── ANIMATIONS ──────────── */
-@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+/* ── Noise overlay ── */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  opacity:.015;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.container{max-width:1200px;margin:0 auto;padding:0 28px;position:relative;z-index:1}
+a{color:var(--coral);text-decoration:none;transition:color .2s}
+a:hover{color:#ff9a78}
+code{
+  font-family:'JetBrains Mono','SF Mono','Fira Code',monospace;font-size:.78rem;
+  padding:2px 8px;border-radius:6px;background:rgba(130,141,185,.1);color:var(--lavender);
+}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes pulse{0%,100%{box-shadow:0 0 8px var(--green),0 0 20px rgba(74,190,138,.3)}50%{box-shadow:0 0 16px var(--green),0 0 40px rgba(74,190,138,.5)}}
-@keyframes slideRight{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 6px var(--green),0 0 18px rgba(74,190,138,.25)}50%{box-shadow:0 0 14px var(--green),0 0 36px rgba(74,190,138,.4)}}
 @keyframes dashFlow{to{stroke-dashoffset:-20}}
-@keyframes glowPulse{0%,100%{opacity:.6}50%{opacity:1}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes nodeEnter{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
-@keyframes borderGlow{0%,100%{border-color:rgba(255,255,255,.08)}50%{border-color:rgba(130,141,185,.25)}}
+@keyframes nodeEnter{from{opacity:0;transform:scale(.88) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes termBlink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes progressPulse{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes scanline{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
+@keyframes dotPulse{0%,80%,100%{transform:scale(0);opacity:.5}40%{transform:scale(1);opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes amberGlow{0%,100%{box-shadow:0 0 4px rgba(240,200,50,.3)}50%{box-shadow:0 0 12px rgba(240,200,50,.5)}}
 
-.animate{opacity:0;animation:fadeInUp .7s cubic-bezier(.16,1,.3,1) forwards}
-.animate-delay-1{animation-delay:.1s}
-.animate-delay-2{animation-delay:.2s}
-.animate-delay-3{animation-delay:.3s}
-.animate-delay-4{animation-delay:.4s}
-.animate-delay-5{animation-delay:.5s}
-.animate-delay-6{animation-delay:.6s}
-.animate-delay-7{animation-delay:.7s}
-.animate-delay-8{animation-delay:.8s}
-.animate-delay-9{animation-delay:.9s}
-.animate-delay-10{animation-delay:1s}
+.anim{opacity:0;animation:fadeUp .65s cubic-bezier(.22,1,.36,1) forwards}
+.d1{animation-delay:.08s}.d2{animation-delay:.16s}.d3{animation-delay:.24s}
+.d4{animation-delay:.32s}.d5{animation-delay:.4s}.d6{animation-delay:.48s}
+.d7{animation-delay:.56s}.d8{animation-delay:.64s}.d9{animation-delay:.72s}
+.d10{animation-delay:.8s}.d11{animation-delay:.88s}.d12{animation-delay:.96s}
 
-/* ──────────── GLASS CARD ──────────── */
+/* ── Glass Card ── */
 .glass{
-  background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  background:var(--glass);backdrop-filter:blur(24px) saturate(1.2);
+  -webkit-backdrop-filter:blur(24px) saturate(1.2);
   border:1px solid var(--glass-border);border-radius:var(--radius);
-  transition:all .35s cubic-bezier(.16,1,.3,1);
+  transition:all .4s cubic-bezier(.22,1,.36,1);
 }
 .glass:hover{
-  background:var(--glass-hover);border-color:rgba(130,141,185,.2);
-  transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3);
+  background:var(--glass-hover);border-color:rgba(130,141,185,.18);
+  transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.25),0 0 0 1px rgba(130,141,185,.08);
 }
 
-/* ──────────── HERO ──────────── */
-.hero{padding:80px 0 40px;text-align:center}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:8px;padding:6px 18px;
-  border-radius:100px;font-size:12px;font-weight:600;letter-spacing:.5px;
+/* ════════════ HERO ════════════ */
+.hero{padding:72px 0 48px;text-align:center}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;padding:5px 16px 5px 12px;
+  border-radius:100px;font-size:.7rem;font-weight:600;letter-spacing:.8px;
   text-transform:uppercase;color:var(--green);
-  background:rgba(74,190,138,.1);border:1px solid rgba(74,190,138,.2);
-  animation:pulse 3s ease-in-out infinite;margin-bottom:24px;
+  background:rgba(74,190,138,.08);border:1px solid rgba(74,190,138,.15);
+  animation:pulse 3.5s ease-in-out infinite;margin-bottom:28px;
 }
-.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.hero-eyebrow .dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;
+  box-shadow:0 0 6px var(--green);
+}
 .hero h1{
-  font-size:clamp(2rem,5vw,3.5rem);font-weight:800;letter-spacing:-.03em;
-  background:linear-gradient(135deg,var(--text-bright) 0%,var(--lavender) 50%,var(--coral) 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;margin-bottom:12px;
+  font-size:clamp(2rem,5vw,3.2rem);font-weight:800;letter-spacing:-.04em;
+  line-height:1.15;margin-bottom:10px;
+  background:linear-gradient(135deg,var(--text-bright) 0%,var(--lavender) 60%,var(--coral) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.hero .subtitle{font-size:1.05rem;color:var(--text-dim);font-weight:400;margin-bottom:36px}
-.stats-bar{
-  display:flex;justify-content:center;gap:32px;flex-wrap:wrap;
-}
-.stat{
-  display:flex;align-items:center;gap:10px;padding:12px 24px;
+.hero .subtitle{font-size:.95rem;color:var(--text-dim);font-weight:400;margin-bottom:40px}
+.stats-row{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
+.stat-card{
+  display:flex;align-items:center;gap:14px;padding:16px 28px;
   border-radius:var(--radius-sm);background:var(--surface);border:1px solid var(--glass-border);
+  transition:all .3s;
 }
-.stat .num{font-size:1.6rem;font-weight:700;color:var(--text-bright)}
-.stat .label{font-size:.82rem;color:var(--text-dim);text-align:left;line-height:1.3}
+.stat-card:hover{border-color:rgba(130,141,185,.2);background:var(--glass-hover)}
+.stat-card .val{font-size:1.8rem;font-weight:800;line-height:1}
+.stat-card .lbl{font-size:.75rem;color:var(--text-dim);line-height:1.3;text-align:left}
 
-/* ──────────── SECTION TITLES ──────────── */
-.section{padding:60px 0}
-.section-title{
-  font-size:1.5rem;font-weight:700;margin-bottom:8px;color:var(--text-bright);
-  display:flex;align-items:center;gap:12px;
+/* ════════════ SECTIONS ════════════ */
+.section{padding:56px 0}
+.section+.section{border-top:1px solid rgba(255,255,255,.03)}
+.sec-head{margin-bottom:36px}
+.sec-title{
+  font-size:1.35rem;font-weight:700;color:var(--text-bright);
+  display:flex;align-items:center;gap:12px;margin-bottom:6px;
 }
-.section-title .icon{
-  width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-  font-size:1.1rem;background:linear-gradient(135deg,var(--navy),rgba(130,141,185,.3));
+.sec-title .ic{
+  width:34px;height:34px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:1rem;flex-shrink:0;
+  background:linear-gradient(135deg,var(--navy),rgba(130,141,185,.25));
 }
-.section-sub{color:var(--text-dim);font-size:.9rem;margin-bottom:36px}
+.sec-sub{color:var(--text-dim);font-size:.85rem}
 
-/* ──────────── WORKFLOW DIAGRAM ──────────── */
-.workflow{position:relative;display:flex;flex-direction:column;align-items:center;gap:0}
-.workflow-row{
-  display:flex;justify-content:center;gap:20px;flex-wrap:wrap;width:100%;
-  position:relative;z-index:2;
-}
-.workflow-connector{
-  width:2px;height:48px;margin:0 auto;position:relative;z-index:1;
-}
-.workflow-connector svg{overflow:visible}
-.workflow-connector line{
-  stroke:var(--lavender);stroke-width:2;stroke-dasharray:6 4;
-  animation:dashFlow 1s linear infinite;opacity:.5;
-}
+/* ════════════ WORKFLOW ════════════ */
+.wf{display:flex;flex-direction:column;align-items:center;gap:0}
+.wf-row{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;width:100%;position:relative;z-index:2}
+.wf-line{width:2px;height:44px;position:relative;z-index:1}
+.wf-line svg{overflow:visible}
+.wf-line line{stroke:var(--lavender);stroke-width:2;stroke-dasharray:6 4;animation:dashFlow .8s linear infinite;opacity:.4}
 
 .wf-node{
-  padding:20px 24px;min-width:220px;max-width:320px;flex:1;cursor:pointer;
-  animation:nodeEnter .6s cubic-bezier(.16,1,.3,1) forwards;opacity:0;
+  padding:18px 22px;min-width:200px;max-width:340px;flex:1;cursor:pointer;
+  animation:nodeEnter .6s cubic-bezier(.22,1,.36,1) forwards;opacity:0;
   position:relative;overflow:hidden;
 }
 .wf-node::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--navy),var(--lavender));border-radius:var(--radius) var(--radius) 0 0;
-  opacity:0;transition:opacity .3s;
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--navy),var(--lavender),var(--coral));
+  opacity:0;transition:opacity .35s;
 }
 .wf-node:hover::before{opacity:1}
-.wf-node .node-icon{font-size:1.5rem;margin-bottom:8px;display:block}
-.wf-node .node-title{font-weight:600;font-size:1rem;color:var(--text-bright);margin-bottom:4px}
-.wf-node .node-detail{font-size:.8rem;color:var(--text-dim);line-height:1.5}
-.wf-node .node-expand{
-  max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.16,1,.3,1);
-  font-size:.78rem;color:var(--lavender);margin-top:0;line-height:1.6;
+.wf-node .ni{font-size:1.35rem;margin-bottom:6px;display:block}
+.wf-node .nt{font-weight:600;font-size:.95rem;color:var(--text-bright);margin-bottom:3px}
+.wf-node .nd{font-size:.78rem;color:var(--text-dim);line-height:1.5}
+.wf-node .nx{
+  max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.22,1,.36,1);
+  font-size:.76rem;color:var(--lavender);line-height:1.7;
 }
-.wf-node.expanded .node-expand{max-height:200px;margin-top:10px}
-.wf-node .expand-hint{
-  font-size:.7rem;color:var(--text-dim);margin-top:8px;opacity:.5;
-  transition:opacity .3s;
-}
-.wf-node:hover .expand-hint{opacity:1}
+.wf-node.open .nx{max-height:220px;margin-top:10px;padding-top:10px;border-top:1px solid var(--glass-border)}
+.wf-node .hint{font-size:.65rem;color:var(--text-dim);margin-top:8px;opacity:.4;transition:opacity .3s}
+.wf-node:hover .hint{opacity:.8}
 
-.email-row{gap:16px}
-.email-row .wf-node{min-width:180px;flex:1}
-.email-row .wf-node.sent{border-color:rgba(74,190,138,.3)}
-.email-row .wf-node.sent::after{
-  content:'✓ Sent';position:absolute;top:12px;right:12px;font-size:.65rem;
-  padding:2px 8px;border-radius:100px;background:rgba(74,190,138,.15);color:var(--green);
-  font-weight:600;
+.email-row .wf-node{min-width:170px}
+.wf-node.e-sent{border-color:rgba(74,190,138,.25)}
+.wf-node.e-sent .badge-s{
+  position:absolute;top:10px;right:10px;font-size:.6rem;padding:2px 8px;
+  border-radius:100px;background:rgba(74,190,138,.12);color:var(--green);font-weight:600;
 }
-.email-row .wf-node.pending{border-color:rgba(255,127,86,.2)}
-.email-row .wf-node.pending::after{
-  content:'Scheduled';position:absolute;top:12px;right:12px;font-size:.65rem;
-  padding:2px 8px;border-radius:100px;background:rgba(255,127,86,.12);color:var(--coral);
-  font-weight:600;
+.wf-node.e-pend{border-color:rgba(255,127,86,.15)}
+.wf-node.e-pend .badge-s{
+  position:absolute;top:10px;right:10px;font-size:.6rem;padding:2px 8px;
+  border-radius:100px;background:rgba(255,127,86,.1);color:var(--coral);font-weight:600;
 }
 
-/* ──────────── ISSUE TRACKER ──────────── */
-.issue-table{width:100%;border-collapse:separate;border-spacing:0 6px}
-.issue-table th{
-  font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);
-  padding:8px 16px;text-align:left;font-weight:600;
+/* ════════════ ISSUE TRACKER ════════════ */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--glass-border);background:var(--glass)}
+.itbl{width:100%;border-collapse:collapse;min-width:640px}
+.itbl th{
+  font-size:.65rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);
+  padding:14px 18px;text-align:left;font-weight:600;
+  border-bottom:1px solid var(--glass-border);background:rgba(255,255,255,.015);
 }
-.issue-table td{
-  padding:14px 16px;background:var(--glass);backdrop-filter:blur(12px);
-  border-top:1px solid var(--glass-border);border-bottom:1px solid var(--glass-border);
-  font-size:.85rem;
+.itbl td{padding:14px 18px;font-size:.83rem;border-bottom:1px solid rgba(255,255,255,.03)}
+.itbl tbody tr{transition:all .3s;opacity:0;animation:fadeUp .5s cubic-bezier(.22,1,.36,1) forwards}
+.itbl tbody tr:hover{background:rgba(255,255,255,.03)}
+.itbl tbody tr:last-child td{border-bottom:none}
+.sev{
+  display:inline-flex;align-items:center;gap:5px;font-weight:600;
+  padding:3px 10px;border-radius:100px;font-size:.72rem;white-space:nowrap;
 }
-.issue-table tr td:first-child{border-left:1px solid var(--glass-border);border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
-.issue-table tr td:last-child{border-right:1px solid var(--glass-border);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
-.issue-table tbody tr{
-  opacity:0;animation:fadeInUp .5s cubic-bezier(.16,1,.3,1) forwards;
-  transition:all .3s;
-}
-.issue-table tbody tr:hover td{background:var(--glass-hover)}
-.severity{
-  display:inline-flex;align-items:center;gap:6px;font-weight:600;
-  padding:3px 10px;border-radius:100px;font-size:.75rem;
-}
-.severity.critical{background:rgba(240,108,90,.12);color:var(--red)}
-.severity.medium{background:rgba(255,200,50,.1);color:#f0c832}
-.severity.low{background:rgba(255,127,86,.1);color:var(--coral)}
-.status-badge{
-  display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:500;
-}
-.status-badge.fixed{color:var(--green)}
-.status-badge.cosmetic{color:var(--lavender)}
+.sev-c{background:rgba(240,108,90,.1);color:var(--red)}
+.sev-m{background:rgba(240,200,50,.08);color:var(--amber)}
+.sev-l{background:rgba(255,127,86,.08);color:var(--coral)}
+.st{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:500;white-space:nowrap}
+.st-ok{color:var(--green)}.st-cos{color:var(--lavender)}
 
-/* ──────────── EMAIL TEMPLATE CARDS ──────────── */
-.email-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px}
-.email-card{
+/* ════════════ EMAIL CARDS ════════════ */
+.ecards{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:20px}
+.ecard{
   border-radius:var(--radius);overflow:hidden;
   background:var(--glass);border:1px solid var(--glass-border);
-  transition:all .4s cubic-bezier(.16,1,.3,1);
+  transition:all .45s cubic-bezier(.22,1,.36,1);
 }
-.email-card:hover{
-  transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,.4);
-  border-color:rgba(130,141,185,.25);
+.ecard:hover{
+  transform:translateY(-5px) scale(1.005);
+  box-shadow:0 20px 56px rgba(0,0,0,.35),0 0 0 1px rgba(130,141,185,.12);
 }
-.email-card-header{
-  padding:28px 24px 20px;position:relative;overflow:hidden;
+.ecard-top{padding:26px 24px 18px;position:relative;overflow:hidden}
+.ecard-top::before{content:'';position:absolute;inset:0;opacity:.1}
+.ecard-top.g1::before{background:linear-gradient(135deg,#34446A,#828DB9)}
+.ecard-top.g2::before{background:linear-gradient(135deg,#34446A,#4a5a8a)}
+.ecard-top.g3::before{background:linear-gradient(135deg,#34446A,#4a7a8a)}
+.ecard-top .enum{
+  font-size:.65rem;text-transform:uppercase;letter-spacing:1.8px;font-weight:700;
+  color:var(--lavender);position:relative;margin-bottom:6px;
 }
-.email-card-header::before{
-  content:'';position:absolute;inset:0;opacity:.12;
-  background:linear-gradient(135deg,var(--c1,var(--navy)),var(--c2,var(--lavender)));
+.ecard-top h3{font-size:1.1rem;font-weight:700;color:var(--text-bright);position:relative;margin-bottom:3px}
+.ecard-top .etm{font-size:.75rem;color:var(--text-dim);position:relative}
+.ecard-body{padding:18px 24px 22px}
+.subj{
+  font-size:.8rem;color:var(--text-dim);margin-bottom:14px;padding:10px 14px;
+  border-radius:var(--radius-xs);background:rgba(255,255,255,.02);
+  border:1px solid var(--glass-border);font-style:italic;line-height:1.5;
 }
-.email-card-header .email-num{
-  font-size:.7rem;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;
-  color:var(--lavender);position:relative;margin-bottom:8px;
+.subj b{color:var(--coral);font-style:normal}
+.cprev{font-size:.8rem;color:var(--text-dim);line-height:1.8;margin-bottom:16px;list-style:none}
+.cprev li{padding-left:18px;position:relative;margin-bottom:2px}
+.cprev li::before{content:'→';position:absolute;left:0;color:var(--lavender);font-size:.75rem}
+.cta{
+  display:inline-block;padding:10px 22px;border-radius:var(--radius-xs);
+  font-size:.8rem;font-weight:600;letter-spacing:.3px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--coral),#e0664a);color:#fff;
+  transition:all .3s;
 }
-.email-card-header h3{
-  font-size:1.15rem;font-weight:700;color:var(--text-bright);position:relative;
-  margin-bottom:4px;
-}
-.email-card-header .email-timing{
-  font-size:.78rem;color:var(--text-dim);position:relative;
-}
-.email-card-body{padding:20px 24px}
-.email-card-body .subject-line{
-  font-size:.82rem;color:var(--text-dim);margin-bottom:14px;
-  padding:10px 14px;border-radius:var(--radius-sm);
-  background:rgba(255,255,255,.03);border:1px solid var(--glass-border);
-  font-style:italic;
-}
-.email-card-body .subject-line strong{color:var(--coral);font-style:normal}
-.email-card-body .content-preview{
-  font-size:.82rem;color:var(--text-dim);line-height:1.7;margin-bottom:16px;
-}
-.email-card-body .content-preview li{margin-bottom:4px;list-style:none;padding-left:16px;position:relative}
-.email-card-body .content-preview li::before{
-  content:'→';position:absolute;left:0;color:var(--lavender);
-}
-.cta-btn{
-  display:inline-block;padding:10px 20px;border-radius:var(--radius-sm);
-  font-size:.82rem;font-weight:600;letter-spacing:.3px;
-  background:linear-gradient(135deg,var(--coral),#e06a48);color:#fff;
-  transition:all .3s;cursor:pointer;border:none;
-}
-.cta-btn:hover{transform:scale(1.03);box-shadow:0 4px 20px rgba(255,127,86,.3)}
-.email-note{
-  margin-top:12px;font-size:.72rem;color:var(--text-dim);
-  padding:8px 12px;border-radius:var(--radius-sm);
-  background:rgba(130,141,185,.06);border-left:2px solid var(--lavender);
+.cta:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(255,127,86,.25)}
+.enote{
+  margin-top:14px;font-size:.72rem;color:var(--text-dim);padding:8px 12px;
+  border-radius:var(--radius-xs);background:rgba(130,141,185,.05);
+  border-left:2px solid var(--lavender);line-height:1.6;
 }
 
-/* ──────────── MERGE TAG TABLE ──────────── */
-.merge-table{width:100%;border-collapse:separate;border-spacing:0 4px}
-.merge-table th{
-  font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);
-  padding:8px 16px;text-align:left;font-weight:600;
+/* ════════════ MERGE TAG TABLE ════════════ */
+.mtbl{width:100%;border-collapse:collapse;min-width:580px}
+.mtbl th{
+  font-size:.65rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim);
+  padding:14px 16px;text-align:left;font-weight:600;
+  border-bottom:1px solid var(--glass-border);background:rgba(255,255,255,.015);
 }
-.merge-table td{
-  padding:12px 16px;background:var(--glass);backdrop-filter:blur(12px);
-  border-top:1px solid var(--glass-border);border-bottom:1px solid var(--glass-border);
-  font-size:.82rem;
-}
-.merge-table tr td:first-child{border-left:1px solid var(--glass-border);border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
-.merge-table tr td:last-child{border-right:1px solid var(--glass-border);border-radius:0 var(--radius-sm) var(--radius-sm) 0}
-.merge-table tbody tr{transition:all .3s}
-.merge-table tbody tr:hover td{background:var(--glass-hover)}
-.merge-table code{
-  font-family:'SF Mono','Fira Code',monospace;font-size:.78rem;
-  padding:2px 8px;border-radius:6px;background:rgba(130,141,185,.12);color:var(--lavender);
-}
-.merge-table .fallback{color:var(--coral);font-style:italic;font-size:.78rem}
+.mtbl td{padding:12px 16px;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.03)}
+.mtbl tbody tr{transition:all .3s;opacity:0;animation:slideIn .4s cubic-bezier(.22,1,.36,1) forwards}
+.mtbl tbody tr:hover{background:rgba(255,255,255,.03)}
+.mtbl tbody tr:last-child td{border-bottom:none}
+.fb{color:var(--coral);font-style:italic;font-size:.78rem}
 
-/* ──────────── FOOTER ──────────── */
+/* ════════════ PIPELINE STATUS ════════════ */
+.pipeline{
+  padding:28px 32px;border-radius:var(--radius);
+  background:var(--glass);border:1px solid var(--glass-border);
+}
+.pipe-title{
+  font-size:.95rem;font-weight:700;color:var(--text-bright);margin-bottom:4px;
+  display:flex;align-items:center;gap:8px;
+}
+.pipe-sub{font-size:.78rem;color:var(--text-dim);margin-bottom:24px}
+.pipe-track{display:flex;align-items:center;gap:0;position:relative;width:100%}
+.pipe-step{flex:1;text-align:center;position:relative;z-index:2}
+.pipe-dot{
+  width:44px;height:44px;border-radius:50%;margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:700;border:2px solid;
+  transition:all .3s;
+}
+.pipe-dot.done{background:rgba(74,190,138,.12);border-color:var(--green);color:var(--green)}
+.pipe-dot.active{
+  background:rgba(240,200,50,.1);border-color:var(--amber);color:var(--amber);
+  animation:amberGlow 2.5s ease-in-out infinite;
+}
+.pipe-dot.wait{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1);color:var(--text-dim)}
+.pipe-label{font-size:.72rem;font-weight:600;color:var(--text-bright);margin-bottom:2px}
+.pipe-detail{font-size:.65rem;color:var(--text-dim)}
+.pipe-bar{
+  position:absolute;top:22px;left:15%;right:15%;height:2px;z-index:1;
+  background:rgba(255,255,255,.06);border-radius:1px;
+}
+.pipe-fill{
+  height:100%;border-radius:1px;
+  background:linear-gradient(90deg,var(--green),var(--amber));
+  width:33%;transition:width 1s ease;
+}
+/* animated dots on bar */
+.pipe-bar .dots{
+  position:absolute;top:-3px;display:flex;gap:4px;
+  left:33%;
+}
+.pipe-bar .dots span{
+  width:8px;height:8px;border-radius:50%;background:var(--amber);
+  animation:dotPulse 1.4s ease-in-out infinite;opacity:0;
+}
+.pipe-bar .dots span:nth-child(2){animation-delay:.16s}
+.pipe-bar .dots span:nth-child(3){animation-delay:.32s}
+
+/* ════════════ CRON GRID ════════════ */
+.cron-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.cron-card{
+  padding:20px;border-radius:var(--radius-sm);
+  background:var(--glass);border:1px solid var(--glass-border);
+  transition:all .35s cubic-bezier(.22,1,.36,1);
+}
+.cron-card:hover{
+  background:var(--glass-hover);border-color:rgba(130,141,185,.18);
+  transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.2);
+}
+.cron-name{font-size:.82rem;font-weight:600;color:var(--text-bright);margin-bottom:6px;line-height:1.3}
+.cron-sched{font-size:.72rem;color:var(--text-dim);margin-bottom:10px}
+.cron-status{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:100px;
+}
+.cron-ok{background:rgba(74,190,138,.1);color:var(--green)}
+.cron-sched-badge{background:rgba(130,141,185,.1);color:var(--lavender)}
+
+/* ════════════ TERMINAL (VALIDATION) ════════════ */
+.term{
+  border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--glass-border);
+  font-family:'JetBrains Mono','SF Mono',monospace;
+}
+.term-bar{
+  display:flex;align-items:center;gap:8px;padding:10px 16px;
+  background:rgba(255,255,255,.04);border-bottom:1px solid var(--glass-border);
+}
+.term-bar .dots{display:flex;gap:6px}
+.term-bar .dots span{width:10px;height:10px;border-radius:50%}
+.term-bar .dots span:nth-child(1){background:#F06C5A}
+.term-bar .dots span:nth-child(2){background:#f0c832}
+.term-bar .dots span:nth-child(3){background:#4abe8a}
+.term-bar .title{font-size:.7rem;color:var(--text-dim);margin-left:auto;letter-spacing:.5px}
+.term-body{padding:20px 22px;background:rgba(8,10,16,.6);min-height:160px}
+.term-line{
+  display:flex;align-items:center;gap:10px;padding:4px 0;
+  font-size:.78rem;opacity:0;animation:slideIn .35s cubic-bezier(.22,1,.36,1) forwards;
+}
+.term-line .chk{color:var(--green);font-weight:700;flex-shrink:0}
+.term-line .file{color:#a0d0b0}
+.term-cursor{
+  display:inline-block;width:8px;height:16px;background:var(--green);
+  margin-left:4px;animation:termBlink 1s step-end infinite;vertical-align:middle;
+}
+
+/* ════════════ FOOTER ════════════ */
 .footer{
-  text-align:center;padding:60px 0 40px;color:var(--text-dim);font-size:.8rem;
-  border-top:1px solid var(--glass-border);margin-top:40px;
+  text-align:center;padding:48px 0 32px;position:relative;
 }
-.footer .logo-text{
-  font-weight:700;font-size:1.1rem;
+.footer::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--navy),var(--coral),var(--lavender),transparent);
+  background-size:300% 100%;animation:gradientShift 8s ease infinite;
+}
+.footer .ft-logo{
+  font-weight:800;font-size:1.05rem;margin-bottom:6px;
   background:linear-gradient(135deg,var(--coral),var(--lavender));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;margin-bottom:8px;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
+.footer .ft-sub{font-size:.78rem;color:var(--text-dim)}
+.footer .ft-link{
+  display:inline-block;margin-top:6px;font-size:.72rem;color:var(--lavender);
+  opacity:.6;transition:opacity .3s;
+}
+.footer .ft-link:hover{opacity:1}
 
-/* ──────────── RESPONSIVE ──────────── */
+/* ════════════ RESPONSIVE ════════════ */
 @media(max-width:768px){
-  .hero{padding:50px 0 30px}
-  .hero h1{font-size:1.8rem}
-  .stats-bar{gap:12px}
-  .stat{padding:10px 16px;flex:1;min-width:140px}
-  .stat .num{font-size:1.2rem}
-  .workflow-row{flex-direction:column;align-items:center}
-  .wf-node{max-width:100%;min-width:0;width:100%}
-  .email-row{flex-direction:column!important}
-  .email-cards{grid-template-columns:1fr}
-  .issue-table,.merge-table{display:block;overflow-x:auto}
-  .section{padding:40px 0}
+  .hero{padding:48px 0 32px}
+  .hero h1{font-size:1.7rem}
+  .stats-row{gap:10px}
+  .stat-card{padding:12px 16px;flex:1;min-width:120px}
+  .stat-card .val{font-size:1.3rem}
+  .wf-row,.email-row{flex-direction:column;align-items:stretch}
+  .wf-node{max-width:100%;min-width:0}
+  .ecards{grid-template-columns:1fr}
+  .cron-grid{grid-template-columns:1fr 1fr}
+  .pipe-track{flex-wrap:wrap;gap:12px}
+  .pipe-bar{display:none}
+  .section{padding:36px 0}
+  .container{padding:0 16px}
+}
+@media(max-width:480px){
+  .cron-grid{grid-template-columns:1fr}
+  .stat-card{min-width:100px}
 }
 
-/* ──────────── SCROLLBAR ──────────── */
-::-webkit-scrollbar{width:6px;height:6px}
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.15)}
 </style>
 </head>
 <body>
 
-<!-- ═══════ HERO ═══════ -->
+<!-- ════════ 1. HERO ════════ -->
 <section class="hero">
 <div class="container">
-  <div class="hero-badge animate animate-delay-1"><span class="dot"></span> System Operational</div>
-  <h1 class="animate animate-delay-2">TWA Email Drip Workflow</h1>
-  <p class="subtitle animate animate-delay-3">Quality Assurance Dashboard — Feb 14, 2026</p>
-  <div class="stats-bar">
-    <div class="stat animate animate-delay-4">
-      <span class="num" style="color:var(--lavender)">1</span>
-      <span class="label">Active<br>Contact</span>
+  <div class="hero-eyebrow anim d1"><span class="dot"></span> System Operational</div>
+  <h1 class="anim d2">TWA Email Drip Workflow</h1>
+  <p class="subtitle anim d3">Quality Assurance Dashboard — Feb 14, 2026</p>
+  <div class="stats-row">
+    <div class="stat-card anim d4">
+      <span class="val" style="color:var(--lavender)">1</span>
+      <span class="lbl">Active<br>Contact</span>
     </div>
-    <div class="stat animate animate-delay-5">
-      <span class="num" style="color:var(--green)">1</span>
-      <span class="label">Email<br>Sent</span>
+    <div class="stat-card anim d5">
+      <span class="val" style="color:var(--green)">1</span>
+      <span class="lbl">Email<br>Sent</span>
     </div>
-    <div class="stat animate animate-delay-6">
-      <span class="num" style="color:var(--red)">0</span>
-      <span class="label">Delivery<br>Failures</span>
+    <div class="stat-card anim d6">
+      <span class="val" style="color:var(--red)">0</span>
+      <span class="lbl">Delivery<br>Failures</span>
     </div>
   </div>
 </div>
 </section>
 
-<!-- ═══════ WORKFLOW DIAGRAM ═══════ -->
+<!-- ════════ 2. WORKFLOW DIAGRAM ════════ -->
 <section class="section">
 <div class="container">
-  <div class="section-title animate animate-delay-2"><span class="icon">⛓️</span> Workflow Diagram</div>
-  <p class="section-sub animate animate-delay-3">Interactive node-based pipeline — click any node to expand</p>
+  <div class="sec-head">
+    <div class="sec-title anim d1"><span class="ic">⛓️</span> Workflow Diagram</div>
+    <p class="sec-sub anim d2">Interactive node-based pipeline — click any node to expand</p>
+  </div>
 
-  <div class="workflow">
-    <!-- Row 1: Scanner -->
-    <div class="workflow-row">
-      <div class="wf-node glass animate" style="animation-delay:.3s" onclick="toggleNode(this)">
-        <span class="node-icon">🔍</span>
-        <div class="node-title">Conquest Scanner</div>
-        <div class="node-detail">Search Atlas API · 4 cities × 3 keywords</div>
-        <div class="node-expand">
-          <strong>Schedule:</strong> Daily at 6 AM EST<br>
+  <div class="wf">
+    <div class="wf-row">
+      <div class="wf-node glass anim" style="animation-delay:.25s" onclick="tog(this)">
+        <span class="ni">🔍</span>
+        <div class="nt">Conquest Scanner</div>
+        <div class="nd">Search Atlas API · 4 cities × 3 keywords · Daily 6 AM</div>
+        <div class="nx">
           <strong>Cities:</strong> Vernon, Kelowna, Penticton, Lake Country<br>
           <strong>Keywords:</strong> plumber, dentist, restaurant, lawyer, HVAC, electrician, landscaper<br>
-          <strong>Engine:</strong> Search Atlas text-search + place-detail endpoints<br>
+          <strong>Engine:</strong> Search Atlas text-search + place-detail<br>
           <strong>Email Scraping:</strong> web_fetch on business website (homepage + /contact)
         </div>
-        <div class="expand-hint">Click to expand ↓</div>
+        <div class="hint">Click to expand ↓</div>
       </div>
     </div>
 
-    <!-- Connector -->
-    <div class="workflow-connector"><svg width="2" height="48"><line x1="1" y1="0" x2="1" y2="48"/></svg></div>
+    <div class="wf-line"><svg width="2" height="44"><line x1="1" y1="0" x2="1" y2="44"/></svg></div>
 
-    <!-- Row 2: Enrollment -->
-    <div class="workflow-row">
-      <div class="wf-node glass animate" style="animation-delay:.45s" onclick="toggleNode(this)">
-        <span class="node-icon">📥</span>
-        <div class="node-title">Enrollment</div>
-        <div class="node-detail">Fetch contact from HighLevel · Map custom fields</div>
-        <div class="node-expand">
-          <strong>CRM:</strong> HighLevel (Location: XSG8d8ejfR8hxkD3qgCw)<br>
-          <strong>Fields Mapped:</strong> current_rank, rating, review_count, top_competitor, competitor_rank, primary_keyword, industry, traffic_lost, monthly_searches<br>
-          <strong>Schedule:</strong> 3 emails over 10 days<br>
+    <div class="wf-row">
+      <div class="wf-node glass anim" style="animation-delay:.38s" onclick="tog(this)">
+        <span class="ni">📥</span>
+        <div class="nt">Enrollment</div>
+        <div class="nd">Fetch contact from HighLevel · Map custom fields · Schedule 3 emails</div>
+        <div class="nx">
+          <strong>CRM:</strong> HighLevel (Location XSG8d8ejfR8hxkD3qgCw)<br>
+          <strong>Custom Fields:</strong> current_rank, rating, review_count, top_competitor, competitor_rank, primary_keyword, industry, traffic_lost, monthly_searches<br>
           <strong>Rule:</strong> No email = no enrollment
         </div>
-        <div class="expand-hint">Click to expand ↓</div>
+        <div class="hint">Click to expand ↓</div>
       </div>
     </div>
 
-    <!-- Connector -->
-    <div class="workflow-connector"><svg width="2" height="48"><line x1="1" y1="0" x2="1" y2="48"/></svg></div>
+    <div class="wf-line"><svg width="2" height="44"><line x1="1" y1="0" x2="1" y2="44"/></svg></div>
 
-    <!-- Row 3: Guardian -->
-    <div class="workflow-row">
-      <div class="wf-node glass animate" style="animation-delay:.6s" onclick="toggleNode(this)">
-        <span class="node-icon">🛡️</span>
-        <div class="node-title">Guardian (5-Layer)</div>
-        <div class="node-detail">Quality gate — blocks bad data before send</div>
-        <div class="node-expand">
+    <div class="wf-row">
+      <div class="wf-node glass anim" style="animation-delay:.5s" onclick="tog(this)">
+        <span class="ni">🛡️</span>
+        <div class="nt">Guardian (5-Layer)</div>
+        <div class="nd">Known clients · Franchise blocklist · Rate limiter · Render validation · Content check</div>
+        <div class="nx">
           <strong>Layer 1:</strong> Known client check — never email existing clients<br>
           <strong>Layer 2:</strong> Franchise blocklist — skip national chains<br>
           <strong>Layer 3:</strong> Rate limiter — prevent duplicate sends<br>
           <strong>Layer 4:</strong> Render validation — verify merge tags resolve<br>
           <strong>Layer 5:</strong> Content check — catch empty tags, broken HTML
         </div>
-        <div class="expand-hint">Click to expand ↓</div>
+        <div class="hint">Click to expand ↓</div>
       </div>
     </div>
 
-    <!-- Connector -->
-    <div class="workflow-connector"><svg width="2" height="48"><line x1="1" y1="0" x2="1" y2="48"/></svg></div>
+    <div class="wf-line"><svg width="2" height="44"><line x1="1" y1="0" x2="1" y2="44"/></svg></div>
 
-    <!-- Row 4: Email Sequence -->
-    <div class="workflow-row email-row">
-      <div class="wf-node glass sent animate" style="animation-delay:.75s" onclick="toggleNode(this)">
-        <span class="node-icon">📧</span>
-        <div class="node-title">Email 1</div>
-        <div class="node-detail">Vulnerability Alert · Day 0</div>
-        <div class="node-expand">
-          Competitor rank data included. Shows how a specific competitor is outranking them in local search. Contains personalized search stats and grid data.
-        </div>
-        <div class="expand-hint">Click ↓</div>
+    <div class="wf-row email-row">
+      <div class="wf-node glass e-sent anim" style="animation-delay:.62s" onclick="tog(this)">
+        <span class="badge-s">✓ Sent</span>
+        <span class="ni">📧</span>
+        <div class="nt">Email 1</div>
+        <div class="nd">Vulnerability Alert · Day 0 · Competitor rank data</div>
+        <div class="nx">Shows how a specific competitor is outranking them. Contains personalized search stats and grid data from Search Atlas scan.</div>
+        <div class="hint">Click ↓</div>
       </div>
-      <div class="wf-node glass pending animate" style="animation-delay:.9s" onclick="toggleNode(this)">
-        <span class="node-icon">📧</span>
-        <div class="node-title">Email 2</div>
-        <div class="node-detail">Financial Reality · Day 3</div>
-        <div class="node-expand">
-          Revenue impact framing. Translates lost search visibility into estimated lost revenue. Includes a 3-step recovery plan and actionable CTA.
-        </div>
-        <div class="expand-hint">Click ↓</div>
+      <div class="wf-node glass e-pend anim" style="animation-delay:.72s" onclick="tog(this)">
+        <span class="badge-s">Scheduled</span>
+        <span class="ni">📧</span>
+        <div class="nt">Email 2</div>
+        <div class="nd">Financial Reality · Day 3 · Revenue impact</div>
+        <div class="nx">Translates lost search visibility into estimated revenue. 3-step recovery plan with actionable CTA.</div>
+        <div class="hint">Click ↓</div>
       </div>
-      <div class="wf-node glass pending animate" style="animation-delay:1.05s" onclick="toggleNode(this)">
-        <span class="node-icon">📧</span>
-        <div class="node-title">Email 3</div>
-        <div class="node-detail">Video Audit OR Book a Call · Day 10</div>
-        <div class="node-expand">
-          Two variants: if Loom video exists, sends personalized audit video. Otherwise, sends a generic "Book My Free Audit Call" CTA. Slack proxy currently offline — fallback CTA active.
-        </div>
-        <div class="expand-hint">Click ↓</div>
+      <div class="wf-node glass e-pend anim" style="animation-delay:.82s" onclick="tog(this)">
+        <span class="badge-s">Scheduled</span>
+        <span class="ni">📧</span>
+        <div class="nt">Email 3</div>
+        <div class="nd">Video Audit OR Book a Call · Day 10</div>
+        <div class="nx">Two variants: Loom video (if exists) or generic booking CTA. Slack proxy offline — fallback CTA active.</div>
+        <div class="hint">Click ↓</div>
       </div>
     </div>
 
-    <!-- Connector -->
-    <div class="workflow-connector"><svg width="2" height="48"><line x1="1" y1="0" x2="1" y2="48"/></svg></div>
+    <div class="wf-line"><svg width="2" height="44"><line x1="1" y1="0" x2="1" y2="44"/></svg></div>
 
-    <!-- Row 5: Notifications -->
-    <div class="workflow-row">
-      <div class="wf-node glass animate" style="animation-delay:1.2s" onclick="toggleNode(this)">
-        <span class="node-icon">📢</span>
-        <div class="node-title">Telegram + Slack</div>
-        <div class="node-detail">Alerts for blocks, failures, video requests</div>
-        <div class="node-expand">
-          <strong>Telegram:</strong> Real-time alerts on Guardian blocks, delivery failures, and system errors<br>
-          <strong>Slack:</strong> Video request notifications (currently offline — ngrok proxy down)<br>
-          <strong>Alert Types:</strong> Block notifications, failure reports, enrollment confirmations
+    <div class="wf-row">
+      <div class="wf-node glass anim" style="animation-delay:.92s" onclick="tog(this)">
+        <span class="ni">📢</span>
+        <div class="nt">Telegram + Slack</div>
+        <div class="nd">Alerts for blocks, failures, video requests</div>
+        <div class="nx">
+          <strong>Telegram:</strong> Real-time alerts on Guardian blocks, delivery failures, system errors<br>
+          <strong>Slack:</strong> Video request notifications (currently offline — ngrok down)<br>
+          <strong>Types:</strong> Block alerts, failure reports, enrollment confirmations
         </div>
-        <div class="expand-hint">Click to expand ↓</div>
+        <div class="hint">Click to expand ↓</div>
       </div>
     </div>
   </div>
 </div>
 </section>
 
-<!-- ═══════ ISSUE TRACKER ═══════ -->
+<!-- ════════ 3. ISSUE TRACKER ════════ -->
 <section class="section">
 <div class="container">
-  <div class="section-title animate animate-delay-2"><span class="icon">🐛</span> Issue Tracker</div>
-  <p class="section-sub animate animate-delay-3">All issues discovered during QA audit — Feb 14, 2026</p>
-
-  <div style="overflow-x:auto">
-  <table class="issue-table">
-    <thead>
-      <tr><th>#</th><th>Severity</th><th>Issue</th><th>Status</th></tr>
-    </thead>
+  <div class="sec-head">
+    <div class="sec-title anim d1"><span class="ic">🐛</span> Issue Tracker</div>
+    <p class="sec-sub anim d2">All issues discovered during QA audit — color-coded by severity</p>
+  </div>
+  <div class="tbl-wrap anim d3">
+  <table class="itbl">
+    <thead><tr><th>#</th><th>Severity</th><th>Issue</th><th>Status</th></tr></thead>
     <tbody>
-      <tr style="animation-delay:.3s">
-        <td>1</td>
-        <td><span class="severity critical">🔴 Critical</span></td>
-        <td>Gateway crash: too many arguments for <code>browser</code></td>
-        <td><span class="status-badge fixed">✅ Fixed</span></td>
-      </tr>
-      <tr style="animation-delay:.4s">
-        <td>2</td>
-        <td><span class="severity medium">🟡 Medium</span></td>
-        <td>Guardian blocked Email 1 ×3 — empty <code>&lt;strong&gt;</code> tags</td>
-        <td><span class="status-badge fixed">✅ Fixed</span></td>
-      </tr>
-      <tr style="animation-delay:.5s">
-        <td>3</td>
-        <td><span class="severity medium">🟡 Medium</span></td>
-        <td>Blocked email retried 3×, triggered 3 Telegram alerts</td>
-        <td><span class="status-badge fixed">✅ Fixed</span></td>
-      </tr>
-      <tr style="animation-delay:.6s">
-        <td>4</td>
-        <td><span class="severity medium">🟡 Medium</span></td>
-        <td>Failover cascade — all Antigravity models failed simultaneously</td>
-        <td><span class="status-badge fixed">✅ Fixed</span></td>
-      </tr>
-      <tr style="animation-delay:.7s">
-        <td>5</td>
-        <td><span class="severity low">🟠 Low</span></td>
-        <td><code>validate-crons.js</code> flagging non-existent script file</td>
-        <td><span class="status-badge fixed">✅ Fixed</span></td>
-      </tr>
-      <tr style="animation-delay:.8s">
-        <td>6</td>
-        <td><span class="severity low">🟠 Low</span></td>
-        <td><code>handler.ts</code> MODULE_TYPELESS warning on startup</td>
-        <td><span class="status-badge cosmetic">⚠️ Cosmetic</span></td>
-      </tr>
-      <tr style="animation-delay:.9s">
-        <td>7</td>
-        <td><span class="severity critical">🔴 Critical</span></td>
-        <td><code>"type":"module"</code> in package.json broke all workspace scripts</td>
-        <td><span class="status-badge fixed">✅ Fixed</span></td>
-      </tr>
-      <tr style="animation-delay:1s">
-        <td>8</td>
-        <td><span class="severity low">🟠 Low</span></td>
-        <td><code>twa-drip-engine.js</code> renamed to <code>.cjs</code> for ESM compat</td>
-        <td><span class="status-badge fixed">✅ Working</span></td>
-      </tr>
+      <tr style="animation-delay:.3s"><td>1</td><td><span class="sev sev-c">🔴 Critical</span></td><td>Gateway crash: too many arguments for <code>browser</code></td><td><span class="st st-ok">✅ Fixed</span></td></tr>
+      <tr style="animation-delay:.38s"><td>2</td><td><span class="sev sev-m">🟡 Medium</span></td><td>Guardian blocked Email 1 ×3 — empty <code>&lt;strong&gt;</code> tags</td><td><span class="st st-ok">✅ Fixed</span></td></tr>
+      <tr style="animation-delay:.46s"><td>3</td><td><span class="sev sev-m">🟡 Medium</span></td><td>Blocked email retried 3×, triggered 3 Telegram alerts</td><td><span class="st st-ok">✅ Fixed</span></td></tr>
+      <tr style="animation-delay:.54s"><td>4</td><td><span class="sev sev-m">🟡 Medium</span></td><td>Failover cascade — all Antigravity models failed simultaneously</td><td><span class="st st-ok">✅ Fixed</span></td></tr>
+      <tr style="animation-delay:.62s"><td>5</td><td><span class="sev sev-l">🟠 Low</span></td><td><code>validate-crons.js</code> flagging non-existent script file</td><td><span class="st st-ok">✅ Fixed</span></td></tr>
+      <tr style="animation-delay:.7s"><td>6</td><td><span class="sev sev-l">🟠 Low</span></td><td><code>handler.ts</code> MODULE_TYPELESS warning on startup</td><td><span class="st st-cos">⚠️ Cosmetic</span></td></tr>
+      <tr style="animation-delay:.78s"><td>7</td><td><span class="sev sev-c">🔴 Critical</span></td><td><code>"type":"module"</code> in package.json broke all workspace scripts</td><td><span class="st st-ok">✅ Reverted</span></td></tr>
+      <tr style="animation-delay:.86s"><td>8</td><td><span class="sev sev-l">🟠 Low</span></td><td><code>twa-drip-engine.js</code> renamed to <code>.cjs</code> for ESM compat</td><td><span class="st st-ok">✅ Working</span></td></tr>
     </tbody>
   </table>
   </div>
 </div>
 </section>
 
-<!-- ═══════ EMAIL TEMPLATE CARDS ═══════ -->
+<!-- ════════ 4. EMAIL TEMPLATES ════════ -->
 <section class="section">
 <div class="container">
-  <div class="section-title animate animate-delay-2"><span class="icon">✉️</span> Email Templates</div>
-  <p class="section-sub animate animate-delay-3">3-email drip sequence — personalized per contact</p>
+  <div class="sec-head">
+    <div class="sec-title anim d1"><span class="ic">✉️</span> Email Templates</div>
+    <p class="sec-sub anim d2">3-email drip sequence — personalized per contact with live data</p>
+  </div>
 
-  <div class="email-cards">
-    <!-- Email 1 -->
-    <div class="email-card animate animate-delay-4">
-      <div class="email-card-header" style="--c1:#34446A;--c2:#828DB9">
-        <div class="email-num">Email 1 of 3</div>
+  <div class="ecards">
+    <div class="ecard anim d3">
+      <div class="ecard-top g1">
+        <div class="enum">Email 1 of 3</div>
         <h3>Vulnerability Alert</h3>
-        <div class="email-timing">📅 Day 0 · Sent immediately on enrollment</div>
+        <div class="etm">📅 Day 0 · Sent immediately on enrollment</div>
       </div>
-      <div class="email-card-body">
-        <div class="subject-line">
-          <strong>Subject:</strong> Why <strong>{competitor}</strong> is Outranking <strong>{company}</strong> in <strong>{city}</strong>
-        </div>
-        <ul class="content-preview">
+      <div class="ecard-body">
+        <div class="subj"><b>Subject:</b> Why <b>{competitor}</b> is Outranking <b>{company}</b> in <b>{city}</b></div>
+        <ul class="cprev">
           <li>Local search rank comparison visual</li>
           <li>Competitor vs. target positioning data</li>
           <li>Search volume + click-through stats</li>
           <li>Personalized with real grid scan data</li>
         </ul>
-        <button class="cta-btn">Yes, Send Me the Plan →</button>
+        <button class="cta">Yes, Send Me the Plan →</button>
       </div>
     </div>
 
-    <!-- Email 2 -->
-    <div class="email-card animate animate-delay-5">
-      <div class="email-card-header" style="--c1:#34446A;--c2:#4a5a8a">
-        <div class="email-num">Email 2 of 3</div>
+    <div class="ecard anim d4">
+      <div class="ecard-top g2">
+        <div class="enum">Email 2 of 3</div>
         <h3>Financial Reality</h3>
-        <div class="email-timing">📅 Day 3 · Sent 72 hours after Email 1</div>
+        <div class="etm">📅 Day 3 · Sent 72 hours after Email 1</div>
       </div>
-      <div class="email-card-body">
-        <div class="subject-line">
-          <strong>Subject:</strong> <strong>{company}</strong> Lost <strong>{traffic}</strong> Searches Last Month
-        </div>
-        <ul class="content-preview">
+      <div class="ecard-body">
+        <div class="subj"><b>Subject:</b> <b>{company}</b> Lost <b>{traffic}</b> Searches Last Month</div>
+        <ul class="cprev">
           <li>Revenue impact table (lost clicks → lost $)</li>
           <li>3-step recovery plan overview</li>
           <li>Industry benchmark comparisons</li>
           <li>Urgency framing: monthly cost of inaction</li>
         </ul>
-        <button class="cta-btn">Reply 'Yes' for Full Breakdown</button>
+        <button class="cta">Reply 'Yes' for Full Breakdown</button>
       </div>
     </div>
 
-    <!-- Email 3 -->
-    <div class="email-card animate animate-delay-6">
-      <div class="email-card-header" style="--c1:#34446A;--c2:#4a7a8a">
-        <div class="email-num">Email 3 of 3</div>
+    <div class="ecard anim d5">
+      <div class="ecard-top g3">
+        <div class="enum">Email 3 of 3</div>
         <h3>Video Audit Invite</h3>
-        <div class="email-timing">📅 Day 10 · Final touchpoint</div>
+        <div class="etm">📅 Day 10 · Final touchpoint</div>
       </div>
-      <div class="email-card-body">
-        <div class="subject-line">
-          <strong>Subject:</strong> Quick Video Audit for <strong>{company}</strong>
-        </div>
-        <ul class="content-preview">
+      <div class="ecard-body">
+        <div class="subj"><b>Subject:</b> Quick Video Audit for <b>{company}</b></div>
+        <ul class="cprev">
           <li>▶️ Personalized Loom video walkthrough</li>
           <li>Coverage map + checklist review</li>
           <li>Specific improvement recommendations</li>
-          <li>Fallback: generic booking CTA when no video</li>
+          <li>Fallback: generic booking CTA if no video</li>
         </ul>
-        <button class="cta-btn">Send Me the Video →</button>
-        <div class="email-note">
-          <strong>Two variants:</strong> If Loom video exists → sends personalized video link. If not → CTA becomes "Book My Free Audit Call →" with Calendly link. (Slack/ngrok proxy currently offline — fallback CTA active)
+        <button class="cta">Send Me the Video →</button>
+        <div class="enote">
+          <strong>Two variants:</strong> If Loom video exists → personalized video link. If not → "Book My Free Audit Call →" with Calendly. (Slack/ngrok proxy offline — fallback CTA active)
         </div>
       </div>
     </div>
@@ -588,139 +611,145 @@ a{color:var(--coral);text-decoration:none}
 </div>
 </section>
 
-<!-- ═══════ MERGE TAG TABLE ═══════ -->
+<!-- ════════ 5. MERGE TAGS ════════ -->
 <section class="section">
 <div class="container">
-  <div class="section-title animate animate-delay-2"><span class="icon">🏷️</span> Merge Tags</div>
-  <p class="section-sub animate animate-delay-3">All dynamic variables with HighLevel custom field IDs and fallback values</p>
-
-  <div style="overflow-x:auto">
-  <table class="merge-table">
-    <thead>
-      <tr><th>Tag</th><th>HighLevel Field</th><th>Fallback Value</th><th>Used In</th></tr>
-    </thead>
+  <div class="sec-head">
+    <div class="sec-title anim d1"><span class="ic">🏷️</span> Merge Tags</div>
+    <p class="sec-sub anim d2">Dynamic variables with fallback values — guaranteed no empty renders</p>
+  </div>
+  <div class="tbl-wrap anim d3">
+  <table class="mtbl">
+    <thead><tr><th>Tag</th><th>Fallback</th><th>Used In</th></tr></thead>
     <tbody>
-      <tr class="animate animate-delay-3">
-        <td><code>{{contact.company}}</code></td>
-        <td>Built-in</td>
-        <td class="fallback">your business</td>
-        <td>All emails</td>
-      </tr>
-      <tr class="animate animate-delay-3">
-        <td><code>{{contact.name}}</code></td>
-        <td>Built-in</td>
-        <td class="fallback">there</td>
-        <td>All emails</td>
-      </tr>
-      <tr class="animate animate-delay-4">
-        <td><code>{{contact.city}}</code></td>
-        <td>Built-in (address.city)</td>
-        <td class="fallback">your area</td>
-        <td>Email 1, 2</td>
-      </tr>
-      <tr class="animate animate-delay-4">
-        <td><code>{{contact.current_rank}}</code></td>
-        <td><code>8OBw6vuNEwSBQ2j7k3LV</code></td>
-        <td class="fallback">below page 1</td>
-        <td>Email 1</td>
-      </tr>
-      <tr class="animate animate-delay-5">
-        <td><code>{{contact.rating}}</code></td>
-        <td><code>oxwcUgVJWQHY9UWGf3eu</code></td>
-        <td class="fallback">—</td>
-        <td>Email 1, 2</td>
-      </tr>
-      <tr class="animate animate-delay-5">
-        <td><code>{{contact.review_count}}</code></td>
-        <td><code>jhePPklLlS1dYw0XgmE2</code></td>
-        <td class="fallback">limited</td>
-        <td>Email 1</td>
-      </tr>
-      <tr class="animate animate-delay-6">
-        <td><code>{{contact.top_competitor}}</code></td>
-        <td><code>BXIJKbWudpZg8MpHhE0E</code></td>
-        <td class="fallback">a local competitor</td>
-        <td>Email 1, 2</td>
-      </tr>
-      <tr class="animate animate-delay-6">
-        <td><code>{{contact.competitor_rank}}</code></td>
-        <td><code>NxYwOBaGnUaqJPfYHJ8g</code></td>
-        <td class="fallback">#1</td>
-        <td>Email 1</td>
-      </tr>
-      <tr class="animate animate-delay-7">
-        <td><code>{{contact.primary_keyword}}</code></td>
-        <td><code>akGUQuZQanpZhKv6UtrQ</code></td>
-        <td class="fallback">your main service</td>
-        <td>Email 1, 2</td>
-      </tr>
-      <tr class="animate animate-delay-7">
-        <td><code>{{contact.industry}}</code></td>
-        <td><code>EYPso1tOjaTFz1cYTwUt</code></td>
-        <td class="fallback">your industry</td>
-        <td>Email 2</td>
-      </tr>
-      <tr class="animate animate-delay-8">
-        <td><code>{{contact.traffic_lost}}</code></td>
-        <td><code>zX2YTSDtjioTGH9pz7zS</code></td>
-        <td class="fallback">hundreds of</td>
-        <td>Email 2</td>
-      </tr>
-      <tr class="animate animate-delay-8">
-        <td><code>{{contact.monthly_searches}}</code></td>
-        <td><code>mncioNOYInICeJD8dpii</code></td>
-        <td class="fallback">thousands</td>
-        <td>Email 2</td>
-      </tr>
-      <tr class="animate animate-delay-9">
-        <td><code>{{contact.gap_report_url}}</code></td>
-        <td><code>Mpt08kxBEEuqZgPGudcR</code></td>
-        <td class="fallback">—</td>
-        <td>Email 2, 3</td>
-      </tr>
-      <tr class="animate animate-delay-9">
-        <td><code>{{contact.video_url}}</code></td>
-        <td><code>G94W1211D6boD4GOcoPk</code></td>
-        <td class="fallback">(triggers fallback CTA)</td>
-        <td>Email 3</td>
-      </tr>
+      <tr style="animation-delay:.2s"><td><code>contact.first_name</code></td><td class="fb">"there"</td><td>All</td></tr>
+      <tr style="animation-delay:.24s"><td><code>contact.company_name</code></td><td class="fb">"your business"</td><td>All</td></tr>
+      <tr style="animation-delay:.28s"><td><code>contact.city</code></td><td class="fb">"Vernon"</td><td>All</td></tr>
+      <tr style="animation-delay:.32s"><td><code>contact.top_competitor</code></td><td class="fb">"top-ranked {industry} providers in {city}"</td><td>1, 3</td></tr>
+      <tr style="animation-delay:.36s"><td><code>contact.current_rank</code></td><td class="fb">"10+"</td><td>1</td></tr>
+      <tr style="animation-delay:.4s"><td><code>contact.traffic_lost</code></td><td class="fb">"50+"</td><td>1, 2</td></tr>
+      <tr style="animation-delay:.44s"><td><code>contact.revenue_impact</code></td><td class="fb">"significant"</td><td>2</td></tr>
+      <tr style="animation-delay:.48s"><td><code>contact.monthly_searches</code></td><td class="fb">"100+"</td><td>1</td></tr>
     </tbody>
   </table>
   </div>
 </div>
 </section>
 
-<!-- ═══════ FOOTER ═══════ -->
+<!-- ════════ 6. PIPELINE STATUS ════════ -->
+<section class="section">
+<div class="container">
+  <div class="sec-head">
+    <div class="sec-title anim d1"><span class="ic">🚀</span> Pipeline Status</div>
+    <p class="sec-sub anim d2">Live contact journey — Groundswell Mechanical Ltd</p>
+  </div>
+  <div class="pipeline anim d3">
+    <div class="pipe-title">🏗️ Groundswell Mechanical Ltd</div>
+    <div class="pipe-sub">Enrolled Feb 15, 2026 · Okanagan HVAC</div>
+    <div class="pipe-track">
+      <div class="pipe-bar">
+        <div class="pipe-fill"></div>
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot done">✓</div>
+        <div class="pipe-label">Email 1</div>
+        <div class="pipe-detail">✅ Sent · Day 0</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot active">2</div>
+        <div class="pipe-label">Email 2</div>
+        <div class="pipe-detail">⏳ In 72h</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot wait">3</div>
+        <div class="pipe-label">Email 3</div>
+        <div class="pipe-detail">⏳ In 240h</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ════════ 7. CRON JOBS ════════ -->
+<section class="section">
+<div class="container">
+  <div class="sec-head">
+    <div class="sec-title anim d1"><span class="ic">⏰</span> Cron Jobs</div>
+    <p class="sec-sub anim d2">Automated schedules powering the conquest pipeline</p>
+  </div>
+  <div class="cron-grid">
+    <div class="cron-card anim d3">
+      <div class="cron-name">TWA Infrastructure Validator</div>
+      <div class="cron-sched">🕐 5 AM daily</div>
+      <span class="cron-status cron-ok">✅ Passing</span>
+    </div>
+    <div class="cron-card anim d4">
+      <div class="cron-name">TWA Daily Geo-Grid Scan</div>
+      <div class="cron-sched">🕐 6 AM daily</div>
+      <span class="cron-status cron-ok">✅ OK (21s)</span>
+    </div>
+    <div class="cron-card anim d5">
+      <div class="cron-name">TWA Drip Processor</div>
+      <div class="cron-sched">🕐 Every 4 hours</div>
+      <span class="cron-status cron-ok">✅ OK (5.6s)</span>
+    </div>
+    <div class="cron-card anim d6">
+      <div class="cron-name">TWA Weekly Authority Check</div>
+      <div class="cron-sched">🕐 Monday 9 AM</div>
+      <span class="cron-status cron-sched-badge">✅ Scheduled</span>
+    </div>
+    <div class="cron-card anim d7">
+      <div class="cron-name">TWA Seasonal Surge Campaign</div>
+      <div class="cron-sched">🕐 1st of Mar–Jul</div>
+      <span class="cron-status cron-sched-badge">✅ Scheduled</span>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ════════ 8. VALIDATION RESULTS ════════ -->
+<section class="section">
+<div class="container">
+  <div class="sec-head">
+    <div class="sec-title anim d1"><span class="ic">🖥️</span> Validation Results</div>
+    <p class="sec-sub anim d2">File integrity check — all critical scripts verified</p>
+  </div>
+  <div class="term anim d3">
+    <div class="term-bar">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="title">validate-crons.js · last run: Feb 14, 2026</div>
+    </div>
+    <div class="term-body">
+      <div class="term-line" style="animation-delay:.4s"><span class="chk">✅</span><span class="file">twa-drip-engine.cjs</span></div>
+      <div class="term-line" style="animation-delay:.5s"><span class="chk">✅</span><span class="file">pdf-generator/generate.js</span></div>
+      <div class="term-line" style="animation-delay:.6s"><span class="chk">✅</span><span class="file">twa-gap-report-template.html</span></div>
+      <div class="term-line" style="animation-delay:.7s"><span class="chk">✅</span><span class="file">twa-drip/twa-guardian.cjs</span></div>
+      <div class="term-line" style="animation-delay:.8s"><span class="chk">✅</span><span class="file">twa-drip/seasonal-context.cjs</span></div>
+      <div class="term-line" style="animation-delay:.9s"><span class="chk">✅</span><span class="file">twa-drip/drip-state.json</span></div>
+      <div class="term-line" style="animation-delay:1s"><span class="chk">✅</span><span class="file">scripts/log-sentinel.cjs</span></div>
+      <div class="term-line" style="animation-delay:1.15s"><span class="chk" style="color:var(--green)">$</span><span class="file" style="color:var(--text-dim)">All checks passed</span><span class="term-cursor"></span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ════════ 9. FOOTER ════════ -->
 <footer class="footer">
   <div class="container">
-    <div class="logo-text">TWA Studio × OpenClaw</div>
-    <p>Okanagan SEO Conquest · Automated Drip Workflow Dashboard</p>
-    <p style="margin-top:8px;opacity:.5">Built with pure HTML/CSS/JS — no frameworks, no dependencies</p>
+    <div class="ft-logo">OpenClaw × Antigravity</div>
+    <p class="ft-sub">Generated by OpenClaw + Antigravity · TWA Studio · <a href="https://twa.studio" class="ft-link">twa.studio</a></p>
+    <p class="ft-sub" style="margin-top:6px;opacity:.4;font-size:.7rem">Pure HTML/CSS/JS · No frameworks · No dependencies</p>
   </div>
 </footer>
 
 <script>
-// ──── Node toggle ────
-function toggleNode(el){el.classList.toggle('expanded')}
-
-// ──── Intersection Observer for scroll animations ────
-const observer=new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){
-      e.target.style.animationPlayState='running';
-      observer.unobserve(e.target);
-    }
-  });
-},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
-
-document.querySelectorAll('.animate').forEach(el=>{
-  el.style.animationPlayState='paused';
-  observer.observe(el);
-});
-
-// Re-trigger table row animations on scroll
-document.querySelectorAll('.issue-table tbody tr, .merge-table tbody tr').forEach(el=>{
-  observer.observe(el);
+function tog(el){el.classList.toggle('open')}
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.style.animationPlayState='running';io.unobserve(e.target)}})
+},{threshold:.08,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.anim,.itbl tbody tr,.mtbl tbody tr,.term-line').forEach(el=>{
+  el.style.animationPlayState='paused';io.observe(el)
 });
 </script>
 </body>
